@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenLang Lexical Analyzer - Phase 1</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🔍 ZenLang Lexical Analyzer</h1>
+                <p class="subtitle">Compiler Design - Phase 1 (Lexical Analysis)</p>
+            </div>
+            <div class="header-actions">
+                <button id="analyzeBtn" class="btn btn-primary">Analyze Code</button>
+                <button id="clearBtn" class="btn btn-secondary">Clear All</button>
+                <button id="sampleBtn" class="btn btn-tertiary">Load Sample</button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Left Panel: Code Editor -->
+            <div class="panel editor-panel">
+                <div class="panel-header">
+                    <h2>📝 Source Code Editor</h2>
+                    <span class="line-count" id="lineCount">Lines: 1</span>
+                </div>
+                <div class="editor-wrapper">
+                    <div class="line-numbers" id="lineNumbers">1</div>
+                    <textarea 
+                        id="codeEditor" 
+                        class="code-editor" 
+                        placeholder="Write your ZenLang code here...&#10;&#10;Example:&#10;num x = 10;&#10;deci pi = 3.14;&#10;display(&quot;Hello World&quot;);&#10;when (x > 5) {&#10;    display(&quot;x is greater than 5&quot;);&#10;}&#10;else {&#10;    display(&quot;x is less than or equal to 5&quot;);&#10;}"
+                        spellcheck="false"
+                    ></textarea>
+                </div>
+            </div>
+
+            <!-- Right Panel: Token Table -->
+            <div class="panel output-panel">
+                <div class="panel-header">
+                    <h2>🎯 Token Table</h2>
+                    <span class="token-count" id="tokenCount">Tokens: 0</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="token-table" id="tokenTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Lexeme</th>
+                                <th>Token Type</th>
+                                <th>Line Number</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tokenTableBody">
+                            <tr class="empty-state">
+                                <td colspan="4">No tokens yet. Write code and click "Analyze Code"</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Panels -->
+        <div class="bottom-panels">
+            <!-- Symbol Table -->
+            <div class="panel symbol-panel">
+                <div class="panel-header">
+                    <h2>📊 Symbol Table</h2>
+                    <span class="symbol-count" id="symbolCount">Identifiers: 0</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="symbol-table" id="symbolTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Identifier</th>
+                                <th>First Occurrence (Line)</th>
+                                <th>Frequency</th>
+                            </tr>
+                        </thead>
+                        <tbody id="symbolTableBody">
+                            <tr class="empty-state">
+                                <td colspan="4">No identifiers found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Error Console -->
+            <div class="panel error-panel">
+                <div class="panel-header">
+                    <h2>⚠️ Error Console</h2>
+                    <span class="error-count" id="errorCount">Errors: 0</span>
+                </div>
+                <div class="error-console" id="errorConsole">
+                    <div class="console-message success">
+                        <span class="console-icon">✓</span>
+                        <span>Ready to analyze code...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer with Info -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Keywords Supported:</h4>
+                    <p>display, input, num, deci, char, string, while, for, when, else</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Token Types:</h4>
+                    <p>Keyword, Identifier, Number, String, Operator, Delimiter, Unknown</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Phase:</h4>
+                    <p>Lexical Analysis (Phase 1 of 6)</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="lexer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
