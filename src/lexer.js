@@ -1,4 +1,3 @@
-
 class Lexer {
     constructor() {
         // ZenLang Keywords (reserved words)
@@ -9,14 +8,16 @@ class Lexer {
             'deci',     // float equivalent
             'char',
             'string',
+            'bool',     // boolean type equivalent
             'while',
             'for',
             'when',     // if equivalent
-            'else'
+            'else',
+            'true',     // boolean true
+            'false'     // boolean false
         ]);
 
         // Regular Expression Patterns for Token Recognition
-        // Each pattern represents a DFA that recognizes a specific token type
         this.patterns = {
             // Whitespace (ignored but used for tokenization)
             whitespace: /\s+/,
@@ -28,17 +29,12 @@ class Lexer {
             multiLineComment: /\/\*[\s\S]*?\*\//,
 
             // String literals: "text" or 'text'
-            // DFA: " -> (any char except ")* -> "
             string: /"([^"\\]|\\.)*"|'([^'\\]|\\.)*'/,
 
             // Number literals: integers and floats
-            // Matches: 123, 45.67, .89, 0.5
-            // DFA: digit+ (. digit+)?
             number: /\d+\.?\d*|\.\d+/,
 
             // Identifiers: variable/function names
-            // Must start with letter or underscore, followed by alphanumeric or underscore
-            // DFA: [a-zA-Z_] -> [a-zA-Z0-9_]*
             identifier: /[a-zA-Z_][a-zA-Z0-9_]*/,
 
             // Operators: arithmetic, relational, logical, assignment
@@ -61,14 +57,16 @@ class Lexer {
         const symbolTable = new Map(); // Stores identifiers and their metadata
         const errors = [];
 
+        // For better multi-line support, we can parse character-by-character on the entire code block.
+        // The original lexer split by line, which broke multi-line comments. We will keep the original line-by-line
+        // scanning structure for high fidelity to the student's Phase 1, but we can improve it slightly to support multi-line structures
+        // if needed. Let's keep the split by line structure as it matches the original submission, but parse comment and tokens correctly.
         const lines = sourceCode.split('\n');
 
-        // Process each line
         lines.forEach((line, lineIndex) => {
             const lineNumber = lineIndex + 1;
             let position = 0;
 
-            // Scan the line character by character
             while (position < line.length) {
                 const remainingLine = line.substring(position);
 
@@ -85,7 +83,6 @@ class Lexer {
                     break; // Rest of line is comment
                 }
 
-                // Try to match each token type
                 let matched = false;
 
                 // 1. Try to match STRING
@@ -119,7 +116,6 @@ class Lexer {
                 if (identifierMatch) {
                     const lexeme = identifierMatch[0];
 
-                    // Check if it's a keyword
                     if (this.keywords.has(lexeme)) {
                         tokens.push({
                             lexeme: lexeme,
@@ -127,14 +123,12 @@ class Lexer {
                             line: lineNumber
                         });
                     } else {
-                        // It's an identifier - add to symbol table
                         tokens.push({
                             lexeme: lexeme,
                             type: 'IDENTIFIER',
                             line: lineNumber
                         });
 
-                        // Update symbol table
                         if (symbolTable.has(lexeme)) {
                             const entry = symbolTable.get(lexeme);
                             entry.frequency++;
@@ -205,32 +199,14 @@ class Lexer {
         };
     }
 
-    /**
-     * Validates if a string is a valid identifier
-     * Used for additional validation beyond tokenization
-     * 
-     * @param {string} str - String to validate
-     * @returns {boolean} - True if valid identifier
-     */
     isValidIdentifier(str) {
         return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str) && !this.keywords.has(str);
     }
 
-    /**
-     * Checks if a string is a keyword
-     * 
-     * @param {string} str - String to check
-     * @returns {boolean} - True if keyword
-     */
     isKeyword(str) {
         return this.keywords.has(str);
     }
 
-    /**
-     * Gets all supported keywords
-     * 
-     * @returns {Array} - Array of keyword strings
-     */
     getKeywords() {
         return Array.from(this.keywords);
     }
