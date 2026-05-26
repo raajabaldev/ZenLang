@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZenLang Lexical Analyzer - Phase 1</title>
+    <title>ZenLang Compiler IDE - Academic Version</title>
+    <!-- Modern Premium Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,123 +13,162 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1>🔍 ZenLang Lexical Analyzer</h1>
-                <p class="subtitle">Compiler Design - Phase 1 (Lexical Analysis)</p>
+                <h1>⚡ ZenLang Interactive IDE</h1>
+                <p class="subtitle">Complete interpreted compiler design project - Phase 2 to 6</p>
             </div>
             <div class="header-actions">
-                <button id="analyzeBtn" class="btn btn-primary">Analyze Code</button>
-                <button id="clearBtn" class="btn btn-secondary">Clear All</button>
-                <button id="sampleBtn" class="btn btn-tertiary">Load Sample</button>
+                <button id="runBtn" class="btn btn-primary">▶ Run Code</button>
+                <button id="clearBtn" class="btn btn-secondary">🧹 Clear All</button>
+                <button id="sampleBtn" class="btn btn-tertiary">📂 Load Demo</button>
             </div>
         </header>
 
-        <!-- Main Content Area -->
+        <!-- Main Workspace Area -->
         <div class="main-content">
             <!-- Left Panel: Code Editor -->
             <div class="panel editor-panel">
                 <div class="panel-header">
-                    <h2>📝 Source Code Editor</h2>
-                    <span class="line-count" id="lineCount">Lines: 1</span>
+                    <h2>📝 Editor</h2>
+                    <span class="badge" id="lineCount">Lines: 1</span>
                 </div>
                 <div class="editor-wrapper">
                     <div class="line-numbers" id="lineNumbers">1</div>
                     <textarea 
                         id="codeEditor" 
                         class="code-editor" 
-                        placeholder="Write your ZenLang code here...&#10;&#10;Example:&#10;num x = 10;&#10;deci pi = 3.14;&#10;display(&quot;Hello World&quot;);&#10;when (x > 5) {&#10;    display(&quot;x is greater than 5&quot;);&#10;}&#10;else {&#10;    display(&quot;x is less than or equal to 5&quot;);&#10;}"
+                        placeholder="Write your ZenLang code here..."
                         spellcheck="false"
                     ></textarea>
                 </div>
             </div>
 
-            <!-- Right Panel: Token Table -->
-            <div class="panel output-panel">
-                <div class="panel-header">
-                    <h2>🎯 Token Table</h2>
-                    <span class="token-count" id="tokenCount">Tokens: 0</span>
+            <!-- Center Panel: Terminal & AST Tree (Tabbed) -->
+            <div class="panel center-panel">
+                <div class="panel-header tab-header">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="terminal-tab">💻 Console Output</button>
+                        <button class="tab-btn" data-tab="ast-tab">🌳 AST Tree Visualizer</button>
+                    </div>
                 </div>
-                <div class="table-wrapper">
-                    <table class="token-table" id="tokenTable">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Lexeme</th>
-                                <th>Token Type</th>
-                                <th>Line Number</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tokenTableBody">
-                            <tr class="empty-state">
-                                <td colspan="4">No tokens yet. Write code and click "Analyze Code"</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                
+                <!-- Tab 1: Interactive Console -->
+                <div class="tab-content active" id="terminal-tab">
+                    <div class="terminal-wrapper">
+                        <div class="terminal-console" id="terminalConsole">
+                            <div class="terminal-line system">ZenLang Execution Console v2.0 ready. Write code and click "Run Code".</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Bottom Panels -->
-        <div class="bottom-panels">
-            <!-- Symbol Table -->
-            <div class="panel symbol-panel">
-                <div class="panel-header">
-                    <h2>📊 Symbol Table</h2>
-                    <span class="symbol-count" id="symbolCount">Identifiers: 0</span>
-                </div>
-                <div class="table-wrapper">
-                    <table class="symbol-table" id="symbolTable">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Identifier</th>
-                                <th>First Occurrence (Line)</th>
-                                <th>Frequency</th>
-                            </tr>
-                        </thead>
-                        <tbody id="symbolTableBody">
-                            <tr class="empty-state">
-                                <td colspan="4">No identifiers found</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Tab 2: AST Tree Node -->
+                <div class="tab-content" id="ast-tab">
+                    <div class="ast-wrapper">
+                        <div class="ast-tree-container" id="astTreeContainer">
+                            <div class="console-message success">
+                                <span>No AST generated. Write code and compile to inspect structure.</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Error Console -->
-            <div class="panel error-panel">
-                <div class="panel-header">
-                    <h2>⚠️ Error Console</h2>
-                    <span class="error-count" id="errorCount">Errors: 0</span>
+            <!-- Right Panel: Tokens & Symbols (Tabbed) -->
+            <div class="panel right-panel">
+                <div class="panel-header tab-header">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="tokens-tab">🎯 Tokens</button>
+                        <button class="tab-btn" data-tab="symbols-tab">📊 Symbol Table</button>
+                    </div>
+                    <span class="badge" id="rightPanelBadge">Tokens: 0</span>
                 </div>
-                <div class="error-console" id="errorConsole">
-                    <div class="console-message success">
-                        <span class="console-icon">✓</span>
-                        <span>Ready to analyze code...</span>
+
+                <!-- Tab 1: Tokens Table -->
+                <div class="tab-content active" id="tokens-tab">
+                    <div class="table-wrapper">
+                        <table class="token-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Lexeme</th>
+                                    <th>Token Type</th>
+                                    <th>Line</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tokenTableBody">
+                                <tr class="empty-state">
+                                    <td colspan="4">No tokens found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Symbol Table -->
+                <div class="tab-content" id="symbols-tab">
+                    <div class="table-wrapper">
+                        <table class="symbol-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Value (Runtime)</th>
+                                    <th>Scope</th>
+                                </tr>
+                            </thead>
+                            <tbody id="symbolTableBody">
+                                <tr class="empty-state">
+                                    <td colspan="5">No symbols defined.</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Footer with Info -->
+        <!-- Bottom Panel: Compilation Status & Logs -->
+        <div class="bottom-panels">
+            <div class="panel error-panel">
+                <div class="panel-header">
+                    <h2>⚠️ Compiler Logs & Diagnostics</h2>
+                    <span class="badge" id="errorCount" style="background-color: var(--primary-color);">Errors: 0</span>
+                </div>
+                <div class="error-console" id="errorConsole">
+                    <div class="console-message success">
+                        <span class="console-icon">✓</span>
+                        <span>Compiler diagnostic check: status OK. Ready to parse.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer / Supported Features Reference -->
         <footer class="footer">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>Keywords Supported:</h4>
-                    <p>display, input, num, deci, char, string, while, for, when, else</p>
+                    <h4>Language Types</h4>
+                    <p><code>num</code> (int), <code>deci</code> (float), <code>string</code>, <code>bool</code> (true/false), <code>char</code></p>
                 </div>
                 <div class="footer-section">
-                    <h4>Token Types:</h4>
-                    <p>Keyword, Identifier, Number, String, Operator, Delimiter, Unknown</p>
+                    <h4>Statements Supported</h4>
+                    <p>Variable declarations, assignments, <code>when / else</code>, <code>while</code> loops, <code>for</code> loops</p>
                 </div>
                 <div class="footer-section">
-                    <h4>Phase:</h4>
-                    <p>Lexical Analysis (Phase 1 of 6)</p>
+                    <h4>Built-in Functions</h4>
+                    <p><code>display(expr)</code> (console out), <code>input(prompt)</code> (interactive prompt dialog)</p>
                 </div>
             </div>
         </footer>
     </div>
 
-    <script src="lexer.js"></script>
+    <!-- Compiler Scripts Load Pipeline -->
+    <script src="src/lexer.js"></script>
+    <script src="src/parser.js"></script>
+    <script src="src/semantic.js"></script>
+    <script src="src/environment.js"></script>
+    <script src="src/interpreter.js"></script>
+    <script src="src/visualizer.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
