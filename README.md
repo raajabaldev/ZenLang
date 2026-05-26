@@ -1,454 +1,277 @@
-# 🔍 ZenLang Lexical Analyzer
+# ⚡ ZenLang Compiler & Interactive IDE
 
-**Compiler Design - Phase 1 (30%)**  
-A complete lexical analyzer for the custom ZenLang programming language.
+**Compiler Design Course Project - Complete Interpreted Mini Programming Language (Phases 1 to 6)**  
+A modular, browser-based compiler pipeline and interactive IDE for **ZenLang**, written in Vanilla HTML, CSS, and JavaScript.
 
 ---
 
 ## 📋 Table of Contents
 
-1. [Overview](#overview)
-2. [Language Specifications](#language-specifications)
-3. [Features](#features)
-4. [How It Works](#how-it-works)
-5. [Regular Expressions Used](#regular-expressions-used)
-6. [DFA Concept](#dfa-concept)
-7. [Compiler Phases](#compiler-phases)
-8. [Installation & Usage](#installation--usage)
-9. [Project Structure](#project-structure)
-10. [Viva Questions & Answers](#viva-questions--answers)
+1. [Overview](#-overview)
+2. [Compiler Architecture Flow](#-compiler-architecture-flow)
+3. [Grammar Specifications (EBNF)](#-grammar-specifications-ebnf)
+4. [Language Specifications & Keywords](#-language-specifications--keywords)
+5. [Compiler Phases & Implementation](#-compiler-phases--implementation)
+6. [Interactive Web IDE Features](#-interactive-web-ide-features)
+7. [Project Structure](#-project-structure)
+8. [Installation & Verification](#-installation--verification)
+9. [Viva Questions & Answers (Phases 1-6)](#-viva-questions--answers-phases-1-6)
+10. [Future Scope](#-future-scope)
 
 ---
 
 ## 🎯 Overview
 
-This project implements the **Lexical Analysis** phase of a compiler for ZenLang, a custom programming language. The lexical analyzer (lexer) reads source code and breaks it down into tokens, which are the smallest meaningful units of the language.
+This project implements a complete, hand-written interpreter for **ZenLang**, a custom-designed mini programming language. It takes raw text source code, tokenizes it (Lexical Analysis), parses it into an Abstract Syntax Tree (Syntax Analysis), validates identifier scopes and static types (Semantic Analysis), and executes the code on a virtual terminal console (Interpretation).
 
-**Key Objectives:**
-- Tokenize ZenLang source code
-- Classify tokens by type (keyword, identifier, number, etc.)
-- Build a symbol table for identifiers
-- Detect and report lexical errors
-- Provide a clean, modern UI for visualization
-
----
-
-## 🌟 Language Specifications
-
-### ZenLang Keywords
-
-| ZenLang Keyword | C/C++ Equivalent | Purpose |
-|-----------------|------------------|---------|
-| `display` | `printf` | Output to console |
-| `input` | `scanf` | Input from user |
-| `num` | `int` | Integer data type |
-| `deci` | `float` | Decimal/float data type |
-| `char` | `char` | Character data type |
-| `string` | `char*` / `string` | String data type |
-| `while` | `while` | While loop |
-| `for` | `for` | For loop |
-| `when` | `if` | Conditional statement |
-| `else` | `else` | Alternative condition |
-
-### Token Types
-
-1. **KEYWORD** - Reserved words (display, num, when, etc.)
-2. **IDENTIFIER** - Variable/function names
-3. **NUMBER** - Integer and floating-point literals
-4. **STRING** - Text enclosed in quotes
-5. **OPERATOR** - Arithmetic, relational, logical operators
-6. **DELIMITER** - Semicolons, braces, parentheses
-7. **UNKNOWN** - Unrecognized characters (errors)
+**Key Objectives Accomplished:**
+*   **Lexer (Phase 1):** Breaks source code into a detailed stream of classified tokens.
+*   **Parser (Phase 2):** Hand-written **Recursive Descent Parser** that maps tokens to a nested Abstract Syntax Tree (AST).
+*   **Semantic Analyzer (Phase 3):** Performs identifier lookup tracking, scope boundary validations, duplicate declaration checking, and type conformity checks.
+*   **Runtime Environment & Interpreter (Phase 4):** Evaluates AST nodes recursively (tree-walk interpreter) with dynamic environment chaining to handle lexical scoping.
+*   **Web IDE & AST Visualizer (Phase 5):** Interactive environment featuring a collapsible graphical AST node explorer, dynamic token/symbol scopes, and a simulated output terminal.
 
 ---
 
-## ✨ Features
+## 📐 Compiler Architecture Flow
 
-### Core Functionality
-- ✅ Complete tokenization of ZenLang source code
-- ✅ Token classification with 7 distinct types
-- ✅ Symbol table generation for identifiers
-- ✅ Lexical error detection and reporting
-- ✅ Line number tracking for all tokens
+The ZenLang compiler runs entirely client-side. The pipeline is designed as follows:
 
-### User Interface
-- 🎨 Modern dark theme with gradient backgrounds
-- 📝 Syntax-highlighted code editor with line numbers
-- 📊 Real-time token table display
-- 🗂️ Symbol table with frequency tracking
-- ⚠️ Error console with color-coded messages
-- 🔄 Sample code loader for quick testing
-- ⌨️ Keyboard shortcuts (Ctrl+Enter to analyze)
+```mermaid
+graph TD
+    subgraph Frontend [Web IDE Interface]
+        Code[Source Code Editor]
+        Console[Console Output Panel]
+        TreeDOM[Interactive AST visualizer]
+        Symbols[Runtime Symbol Table]
+    end
 
-### Code Quality
-- 📚 Comprehensive inline documentation
-- 🧩 Modular, reusable code structure
-- 🎯 Clean separation of concerns (lexer logic vs UI)
-- 💬 Detailed comments explaining theory
+    subgraph Pipeline [Compiler Core Pipeline]
+        Lexer[Lexer: src/lexer.js]
+        Parser[Parser: src/parser.js]
+        Semantic[Semantic Analyzer: src/semantic.js]
+        Interpreter[Interpreter: src/interpreter.js]
+        Env[Environment: src/environment.js]
+    end
+
+    Code -->|Source Text| Lexer
+    Lexer -->|Tokens Table| Lexer
+    Lexer -->|Token Stream| Parser
+    
+    Parser -->|Parser Errors| Code
+    Parser -->|Abstract Syntax Tree| TreeDOM
+    Parser -->|AST| Semantic
+    
+    Semantic -->|Semantic Errors| Code
+    Semantic -->|Validated AST| Interpreter
+    
+    Interpreter <-->|Scope definitions| Env
+    Interpreter -->|display| Console
+    Console -->|input prompt| Interpreter
+    Interpreter -->|Var values| Symbols
+```
 
 ---
 
-## 🔧 How It Works
+## 📜 Grammar Specifications (EBNF)
 
-### Lexical Analysis Process
+To resolve expressions and statements unambiguously, ZenLang is defined using a non-left-recursive Context-Free Grammar. Operator precedence is handled structurally.
 
+```ebnf
+Program             ::= StatementList
+StatementList       ::= Statement*
+Statement           ::= VarDecl
+                      | Assignment
+                      | WhenStatement
+                      | WhileStatement
+                      | ForStatement
+                      | DisplayStatement
+                      | InputStatement
+                      | BlockStatement
+
+VarDecl             ::= Type Identifier ("=" Expression)? ";"
+Type                ::= "num" | "deci" | "string" | "bool" | "char"
+Assignment          ::= Identifier "=" Expression ";"
+AssignmentNoSemi    ::= Identifier "=" Expression
+BlockStatement      ::= "{" StatementList "}"
+
+WhenStatement       ::= "when" "(" Expression ")" BlockStatement ("else" BlockStatement)?
+WhileStatement      ::= "while" "(" Expression ")" BlockStatement
+ForStatement        ::= "for" "(" (VarDecl | Assignment | ";") Expression ";" AssignmentNoSemi ")" BlockStatement
+
+DisplayStatement    ::= "display" "(" Expression ")" ";"
+InputStatement      ::= "input" "(" Expression ")" ";"
+
+/* Expression Hierarchy for Operator Precedence */
+Expression          ::= LogicalOrExpr
+
+LogicalOrExpr       ::= LogicalAndExpr ( "||" LogicalAndExpr )*
+LogicalAndExpr      ::= EqualityExpr ( "&&" EqualityExpr )*
+EqualityExpr        ::= RelationalExpr ( ( "==" | "!=" ) RelationalExpr )*
+RelationalExpr      ::= AdditiveExpr ( ( "<" | ">" | "<=" | ">=" ) AdditiveExpr )*
+AdditiveExpr        ::= MultiplicativeExpr ( ( "+" | "-" ) MultiplicativeExpr )*
+MultiplicativeExpr  ::= UnaryExpr ( ( "*" | "/" | "%" ) UnaryExpr )*
+UnaryExpr           ::= ( "!" | "-" ) UnaryExpr 
+                      | PrimaryExpr
+
+PrimaryExpr         ::= Identifier
+                      | Literal
+                      | "(" Expression ")"
+                      | CallExpression
+
+CallExpression      ::= "input" "(" Expression ")"
+                      | "display" "(" Expression ")"
+
+Literal             ::= NumberLiteral
+                      | StringLiteral
+                      | BooleanLiteral
+                      | CharLiteral
 ```
-Source Code → Lexer → Tokens → Symbol Table
-                  ↓
-              Error Detection
-```
-
-**Step-by-Step:**
-
-1. **Input**: User writes ZenLang code in the editor
-2. **Scanning**: Lexer reads code character by character
-3. **Pattern Matching**: Regular expressions match token patterns
-4. **Classification**: Tokens are categorized by type
-5. **Symbol Table**: Identifiers are stored with metadata
-6. **Error Detection**: Unknown characters are flagged
-7. **Output**: Results displayed in tables and console
-
-### Example
-
-**Input Code:**
-```zenlang
-num x = 10;
-display("Hello");
-```
-
-**Tokens Generated:**
-
-| Lexeme | Token Type | Line |
-|--------|------------|------|
-| `num` | KEYWORD | 1 |
-| `x` | IDENTIFIER | 1 |
-| `=` | OPERATOR | 1 |
-| `10` | NUMBER | 1 |
-| `;` | DELIMITER | 1 |
-| `display` | KEYWORD | 2 |
-| `(` | DELIMITER | 2 |
-| `"Hello"` | STRING | 2 |
-| `)` | DELIMITER | 2 |
-| `;` | DELIMITER | 2 |
-
-**Symbol Table:**
-
-| Identifier | First Line | Frequency |
-|------------|------------|-----------|
-| `x` | 1 | 1 |
 
 ---
 
-## 📐 Regular Expressions Used
+## 🌟 Language Specifications & Keywords
 
-The lexer uses the following regex patterns:
+### Type System & Coercions
+ZenLang supports static declarations with runtime verification:
+1.  `num` - Stored as JavaScript integers (coerced using `Math.trunc` on assignment).
+2.  `deci` - Floating point values.
+3.  `string` - Double quoted (`"..."`) or single quoted (`'...'`) character strings.
+4.  `bool` - Logical state (`true` or `false`).
+5.  `char` - Single characters (string of length 1, single quotes).
 
-### 1. **String Literals**
-```regex
-"([^"\\]|\\.)*"|'([^'\\]|\\.)*'
-```
-- Matches text in double or single quotes
-- Handles escape sequences like `\n`, `\"`
+*   **Type Promotion:** Operations between `num` and `deci` automatically promote results to `deci`.
+*   **Concatenation Coercion:** Adding a `string` to any other type automatically converts the non-string operand to text and performs string concatenation.
 
-### 2. **Number Literals**
-```regex
-\d+\.?\d*|\.\d+
-```
-- Matches integers: `123`, `0`, `999`
-- Matches floats: `3.14`, `0.5`, `.99`
+### Keyword Reference
 
-### 3. **Identifiers**
-```regex
-[a-zA-Z_][a-zA-Z0-9_]*
-```
-- Must start with letter or underscore
-- Can contain letters, digits, underscores
-- Examples: `x`, `count`, `_temp`, `myVar123`
-
-### 4. **Operators**
-```regex
-==|!=|<=|>=|&&|\|\||[+\-*/%=<>!&|]
-```
-- Multi-character: `==`, `!=`, `<=`, `>=`, `&&`, `||`
-- Single-character: `+`, `-`, `*`, `/`, `%`, `=`, `<`, `>`, `!`
-
-### 5. **Delimiters**
-```regex
-[;,(){}[\]]
-```
-- Matches: `;`, `,`, `(`, `)`, `{`, `}`, `[`, `]`
+| Keyword | Purpose | Sample Syntax |
+|---|---|---|
+| `num` | 32-bit Integer declaration | `num count = 0;` |
+| `deci` | Float declaration | `deci fraction = 0.75;` |
+| `string` | Text string declaration | `string greet = "hello";` |
+| `bool` | Boolean declaration | `bool flag = true;` |
+| `char` | Character declaration | `char letter = 'A';` |
+| `when` | Conditional branch (if) | `when (x > 5) { ... }` |
+| `else` | Alternative branch (else) | `else { ... }` |
+| `while` | Loop statement | `while (count < 10) { ... }` |
+| `for` | Loop statement | `for (num i = 0; i < 5; i = i + 1) { ... }` |
+| `display` | Prints output to terminal | `display("Value is: " + x);` |
+| `input` | Dialog prompt returning string | `string text = input("Enter name: ");` |
 
 ---
 
-## 🤖 DFA Concept
+## 🛠️ Compiler Phases & Implementation
 
-### What is a DFA?
+### 1. Lexical Analysis (`src/lexer.js`)
+Performs a character scanning pass on lines. Matches patterns using JavaScript regular expressions and outputs token objects:
+*   Includes `bool`, `true`, and `false` support.
+*   Maps line numbers for diagnostic reports.
 
-A **Deterministic Finite Automaton (DFA)** is a state machine used to recognize patterns in strings.
+### 2. Recursive Descent Parser (`src/parser.js`)
+Consumes the token stream sequentially. If an error is hit, it appends details to an error log and enters `synchronize()` mode:
+*   Discards tokens until a statement boundary (like `;` or keywords like `when`, `while`) is reached to resume compiling downstream code. This prevents one syntax mistake from breaking compile diagnostic reporting for the whole file.
+*   Converts grammar rules into AST nodes.
 
-**Components:**
-- **States**: Nodes representing positions in pattern matching
-- **Transitions**: Edges labeled with input characters
-- **Start State**: Initial state
-- **Accept States**: States indicating successful match
+### 3. Semantic Analysis (`src/semantic.js`)
+Constructs an internal stack of symbol maps representing active scopes (lexical scope nesting):
+*   **Undeclared Variables:** Triggers error if an identifier is assigned to or read before it is defined.
+*   **Duplicate Declarations:** Triggers error if a variable name is declared multiple times in the same scope level.
+*   **Static Type Checking:** Enforces strict assignments, ensuring types evaluated in expressions match the target variable.
 
-### Example: DFA for Identifier Recognition
-
-```
-     [a-zA-Z_]        [a-zA-Z0-9_]
-(Start) ---------> (Accept) <---------+
-   q0                 q1              |
-                       |              |
-                       +--------------+
-                          (loop)
-```
-
-**How it works:**
-1. Start in state `q0`
-2. Read first character:
-   - If `[a-zA-Z_]` → move to `q1` (accept state)
-   - Otherwise → reject
-3. While in `q1`, read next character:
-   - If `[a-zA-Z0-9_]` → stay in `q1`
-   - Otherwise → stop (accept if no more input)
-
-**Examples:**
-- `x` → Accept ✅
-- `myVar` → Accept ✅
-- `_temp123` → Accept ✅
-- `123abc` → Reject ❌ (starts with digit)
-
-### DFA vs NFA
-
-| DFA | NFA |
-|-----|-----|
-| One transition per input | Multiple transitions possible |
-| Deterministic | Non-deterministic |
-| Faster execution | Slower execution |
-| Used in lexers | Used in regex engines |
+### 4. Interpretation Engine & Environment (`src/environment.js`, `src/interpreter.js`)
+Executes the validated AST directly using a recursive tree-walk:
+*   **Runtime Types:** Stored values are represented as objects `{ type, value }` to maintain boundaries between data types (like integer division vs decimal division).
+*   **Lexical Scoping:** Variables are stored in nested `Environment` scopes containing parent links, allowing inner scopes to resolve outer values.
+*   **Infinite Loop Protection:** Enforces a loop budget of 5000 iterations to prevent browsers from freezing on infinite loop code.
 
 ---
 
-## 📚 Compiler Phases
+## 💻 Interactive Web IDE Features
 
-The ZenLang compiler will have 6 phases. **This project implements Phase 1.**
-
-### Phase 1: Lexical Analysis ✅ (THIS PROJECT)
-- **Input**: Source code (text)
-- **Output**: Stream of tokens
-- **Purpose**: Break code into meaningful units
-- **Tools**: Regular expressions, DFAs
-
-### Phase 2: Syntax Analysis (Future)
-- **Input**: Tokens
-- **Output**: Parse tree / Abstract Syntax Tree (AST)
-- **Purpose**: Check grammatical structure
-- **Tools**: Context-free grammars, parsers
-
-### Phase 3: Semantic Analysis (Future)
-- **Input**: Parse tree
-- **Output**: Annotated parse tree
-- **Purpose**: Type checking, scope resolution
-- **Tools**: Symbol tables, type systems
-
-### Phase 4: Intermediate Code Generation (Future)
-- **Input**: Annotated parse tree
-- **Output**: Intermediate representation (IR)
-- **Purpose**: Platform-independent code
-- **Tools**: Three-address code, quadruples
-
-### Phase 5: Code Optimization (Future)
-- **Input**: IR code
-- **Output**: Optimized IR code
-- **Purpose**: Improve performance
-- **Tools**: Data flow analysis, loop optimization
-
-### Phase 6: Code Generation (Future)
-- **Input**: Optimized IR
-- **Output**: Target machine code
-- **Purpose**: Generate executable code
-- **Tools**: Register allocation, instruction selection
-
----
-
-## 🚀 Installation & Usage
-
-### Prerequisites
-- Any modern web browser (Chrome, Firefox, Edge, Safari)
-- No server or dependencies required!
-
-### Running the Application
-
-1. **Download/Clone** the project files
-2. **Open** `index.html` in your web browser
-3. **Write** ZenLang code in the editor or click "Load Sample"
-4. **Click** "Analyze Code" or press `Ctrl+Enter`
-5. **View** results in the token table, symbol table, and error console
-
-### Keyboard Shortcuts
-
-- `Ctrl+Enter` / `Cmd+Enter` - Analyze code
-- `Ctrl+L` / `Cmd+L` - Clear all
+The user interface has been completely revamped into a professional compiler workbench:
+1.  **Code Editor:** Responsive panel supporting live line counts.
+2.  **Output Console:** Simulated terminal showing execution progress, display logs, and echoes input prompt inputs.
+3.  **AST Tree Visualizer:** Interactive graphical representation of the parsed AST with collapsible nodes.
+4.  **Token Table:** Displays the full matched lexeme stream with categorized badges.
+5.  **Symbol Table:** Lists declared variables, their static types, active scope labels, and **live runtime values** post-execution.
+6.  **Diagnostic Logs:** Captures syntax, semantic, and runtime errors in bright red alerts with line pointers.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-compiler-design/
-│
-├── index.html          # Main HTML structure
-├── styles.css          # Modern UI styling
-├── lexer.js            # Core lexical analyzer logic
-├── app.js              # UI controller and event handlers
-└── README.md           # This file
-```
-
-### File Descriptions
-
-**index.html**
-- Defines the page structure
-- Split-screen layout with editor and output panels
-- Semantic HTML for accessibility
-
-**styles.css**
-- Modern dark theme with CSS variables
-- Responsive grid layout
-- Smooth animations and transitions
-- Custom scrollbar styling
-
-**lexer.js**
-- `Lexer` class with tokenization logic
-- Regular expression patterns for token matching
-- Symbol table management
-- Comprehensive documentation
-
-**app.js**
-- DOM manipulation and event handling
-- UI updates for tokens, symbols, and errors
-- Sample code loader
-- Keyboard shortcut support
-
----
-
-## 🎓 Viva Questions & Answers
-
-### Basic Questions
-
-**Q1: What is lexical analysis?**  
-**A:** Lexical analysis is the first phase of compilation where source code is scanned and converted into tokens. It groups characters into meaningful units like keywords, identifiers, and operators.
-
-**Q2: What is a token?**  
-**A:** A token is the smallest meaningful unit in a programming language. It consists of a lexeme (the actual text) and a token type (category like KEYWORD or NUMBER).
-
-**Q3: What is the difference between a lexeme and a token?**  
-**A:** A lexeme is the actual character sequence (e.g., `"display"`), while a token is the category it belongs to (e.g., KEYWORD).
-
-**Q4: What is a symbol table?**  
-**A:** A symbol table is a data structure that stores information about identifiers (variables, functions) including their names, types, scope, and memory locations.
-
-### Intermediate Questions
-
-**Q5: What are regular expressions?**  
-**A:** Regular expressions are patterns used to match character sequences. They define rules for recognizing tokens like identifiers (`[a-zA-Z_][a-zA-Z0-9_]*`) or numbers (`\d+`).
-
-**Q6: What is a DFA?**  
-**A:** A Deterministic Finite Automaton is a state machine that recognizes patterns. It has states and transitions, and accepts input if it ends in an accepting state.
-
-**Q7: How does your lexer handle errors?**  
-**A:** When the lexer encounters a character that doesn't match any pattern, it creates an UNKNOWN token and adds an error to the error list with the line number.
-
-**Q8: Why do we need lexical analysis?**  
-**A:** Lexical analysis simplifies parsing by converting raw text into structured tokens. It also removes whitespace and comments, making the parser's job easier.
-
-### Advanced Questions
-
-**Q9: What is the difference between DFA and NFA?**  
-**A:** DFA has exactly one transition per input symbol and is deterministic. NFA can have multiple transitions or epsilon transitions and is non-deterministic. DFAs are faster but NFAs are easier to construct.
-
-**Q10: How do you handle keywords vs identifiers?**  
-**A:** First, I match the pattern for identifiers. Then, I check if the matched string exists in the keyword set. If yes, it's a KEYWORD; otherwise, it's an IDENTIFIER.
-
-**Q11: What is the time complexity of your lexer?**  
-**A:** O(n) where n is the length of the source code, as we scan each character once.
-
-**Q12: How would you extend this to Phase 2 (parsing)?**  
-**A:** I would implement a parser using a context-free grammar. The parser would consume tokens from the lexer and build a parse tree or AST based on the grammar rules.
-
----
-
-## 🏆 Project Highlights for Viva
-
-1. **Clean Code**: Well-commented, modular structure
-2. **Theory Integration**: DFA and regex concepts explained
-3. **Professional UI**: Modern, responsive design
-4. **Error Handling**: Comprehensive error detection
-5. **Symbol Table**: Tracks identifiers with frequency
-6. **Extensible**: Easy to add new keywords or token types
-7. **Documentation**: Detailed README and inline comments
-
----
-
-## 📝 Sample ZenLang Programs
-
-### Example 1: Hello World
-```zenlang
-display("Hello, ZenLang!");
-```
-
-### Example 2: Variables and Arithmetic
-```zenlang
-num x = 10;
-num y = 20;
-num sum = x + y;
-display(sum);
-```
-
-### Example 3: Conditional Statement
-```zenlang
-num age = 18;
-when (age >= 18) {
-    display("Adult");
-}
-else {
-    display("Minor");
-}
-```
-
-### Example 4: Loop
-```zenlang
-num i = 0;
-while (i < 5) {
-    display(i);
-    i = i + 1;
-}
+compilerr/
+├── index.html                   # HTML Entry point (three-panel layout)
+├── styles.css                   # Premium CSS styles & animations
+├── app.js                       # IDE Coordinator (coordinates compilation stages)
+├── test_compiler.js             # [NEW] CommonJS Node compiler test suite
+├── README.md                    # Project documentation
+└── src/
+    ├── lexer.js                 # Lexer (Phase 1, extended with boolean types)
+    ├── parser.js                # Recursive Descent Parser
+    ├── semantic.js              # Scope & Type Semantic Checker
+    ├── environment.js           # Lexical Environment scope states
+    ├── interpreter.js           # AST Tree-walk interpreter
+    └── visualizer.js            # DOM-based interactive AST drawing tree
 ```
 
 ---
 
-## 🎯 Future Enhancements
+## 🚀 Installation & Verification
 
-- [ ] Add syntax highlighting in the editor
-- [ ] Implement Phase 2: Syntax Analysis (Parser)
-- [ ] Export tokens to JSON/CSV
-- [ ] Add more token types (comments, preprocessor directives)
-- [ ] Support for multi-line strings
-- [ ] Better error recovery mechanisms
+### Running the IDE in Browser
+1.  Clone/download this directory.
+2.  Double-click `index.html` (or serve it locally) to run the compiler IDE in any modern browser.
+3.  Click **Load Demo** to populate sample loops, conditions, and prompts, then click **Run Code**.
 
----
-
-## 👨‍💻 Author
-
-**3rd Year Engineering Student**  
-Compiler Design Project - Phase 1  
-ZenLang Lexical Analyzer
+### Verification Suite
+You can verify the compiler components via terminal tests if Node.js is installed:
+```bash
+node test_compiler.js
+```
+This runs assertions against five test programs (checking basic math, type mismatches, undeclared variables, duplicate variables, and loop iteration counts).
 
 ---
 
-## 📄 License
+## 🎓 Viva Questions & Answers (Phases 1-6)
 
-This project is created for educational purposes as part of a compiler design course.
+### Phase 1: Lexical Analysis
+**Q1: How does the lexer distinguish keywords from identifiers?**  
+*   **A:** The lexer matches identifiers using the regex `/^[a-zA-Z_][a-zA-Z0-9_]*/`. Once an identifier lexeme is matched, it checks if it exists in the reserved `keywords` Set. If yes, it is classified as a `KEYWORD` token; otherwise, it is classified as an `IDENTIFIER` token.
+
+**Q2: What is the purpose of returning line numbers with tokens?**  
+*   **A:** Line numbers are tracked by the lexer and carried by tokens into AST nodes. This allows downstream compiler phases (parser, semantic checker, and interpreter) to point to the exact line of code when reporting errors.
+
+### Phase 2: Syntax Analysis (Parser)
+**Q3: What is a Recursive Descent Parser?**  
+*   **A:** It is a top-down parser that parses input tokens by defining a set of recursive functions, where each function corresponds to a non-terminal rule in the Context-Free Grammar.
+
+**Q4: How does your parser resolve operator precedence?**  
+*   **A:** Precedence is resolved by structuring parsing methods hierarchically. Lower precedence operators (like assignment `=` or logical `||`) are parsed first, calling higher precedence methods (like arithmetic multiplication `*` or unary `-`) as sub-components. This pushes higher precedence operations deeper into the tree, ensuring they evaluate first.
+
+**Q5: What is parser synchronization?**  
+*   **A:** Synchronization is an error recovery technique. When a syntax error is thrown (like a missing semicolon), the parser logs it, discards tokens until it finds a statement delimiter (like `;` or a statement keyword), and resumes parsing the next line. This allows the compiler to detect multiple syntax errors in a single compilation run instead of crashing on the first issue.
+
+### Phase 3: Semantic Analysis
+**Q6: What checks does the Semantic Analyzer perform that the Parser cannot?**  
+*   **A:** The Parser only checks if the code is grammatically correct (e.g. `num x = "string";` is grammatically correct). The Semantic Analyzer validates meaning: it checks if variables were declared before use, detects if a variable is declared twice in the same scope, and checks if data types match during assignment.
+
+**Q7: How is scope checked in your compiler?**  
+*   **A:** We use a stack of scopes (implemented as an array of JavaScript Map objects). When entering a block statement `{`, we push a new Map onto the stack. When declaring variables, we insert them into the top map. When resolving identifiers, we search from the top map down to the bottom (global) map. When leaving the block `}`, we pop the top map.
+
+### Phase 4 & 5: Interpreter & Web IDE
+**Q8: What is a tree-walk interpreter?**  
+*   **A:** It is an execution engine that directly traverses the Abstract Syntax Tree. It visits each statement node recursively, evaluating child expression nodes to calculate program results at runtime without generating intermediate assembly code.
+
+**Q9: Why does the interpreter store variables as `{ type, value }` objects rather than raw JavaScript values?**  
+*   **A:** Storing type metadata alongside values allows the interpreter to emulate ZenLang-specific type rules accurately, such as integer division (truncation) for `num` types, preventing float promotion unless a `deci` operand is explicitly involved.
 
 ---
 
-**Good luck with your viva! 🎓**
+## 🎯 Future Scope
+
+*   **Syntax Highlighting Editor:** Integrate the code editor panel with CodeMirror or Monaco to support full syntax coloring.
+*   **Code Optimization Phase:** Implement a folding optimizer that pre-calculates static arithmetic constants at the AST level before execution (e.g. optimizing `x = 2 + 3;` to `x = 5;`).
+*   **Compiled Target (Assembly/Bytecode):** Add a code generation button to compile ZenLang AST nodes into WebAssembly (Wasm) or JVM Bytecode for native hardware execution.
